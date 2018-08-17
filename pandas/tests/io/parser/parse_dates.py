@@ -674,3 +674,19 @@ date,time,prn,rxstatus
         # (i.e. float precision should remain unchanged).
         result = self.read_csv(StringIO(data), parse_dates=parse_dates)
         tm.assert_frame_equal(result, expected)
+
+    def test_parse_timezone(self):
+        import pytz
+        data = """dt,val
+                  2018-01-04 09:01:00+09:00,23350
+                  2018-01-04 09:02:00+09:00,23400
+                  2018-01-04 09:03:00+09:00,23400
+                  2018-01-04 09:04:00+09:00,23400
+                  2018-01-04 09:05:00+09:00,23400"""
+        parsed = self.read_csv(StringIO(data), parse_dates=['dt'])
+        dti = pd.DatetimeIndex(start='2018-01-04 09:01:00',
+                               end='2018-01-04 09:05:00', freq='1min',
+                               tz=pytz.FixedOffset(540))
+        expected_data = {'dt': dti, 'val': [23350, 23400, 23400, 23400, 23400]}
+        expected = DataFrame(expected_data)
+        tm.assert_frame_equal(parsed, expected)

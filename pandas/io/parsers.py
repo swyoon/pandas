@@ -25,6 +25,7 @@ from pandas.core.dtypes.dtypes import CategoricalDtype
 from pandas.core.dtypes.missing import isna
 from pandas.core.dtypes.cast import astype_nansafe
 from pandas.core.index import (Index, MultiIndex, RangeIndex,
+                               DatetimeIndex,
                                ensure_index_from_sequences)
 from pandas.core.series import Series
 from pandas.core.frame import DataFrame
@@ -3030,14 +3031,17 @@ def _make_date_converter(date_parser=None, dayfirst=False,
             strs = _concat_date_cols(date_cols)
 
             try:
-                return tools.to_datetime(
+                converted = tools.to_datetime(
                     ensure_object(strs),
                     utc=None,
-                    box=False,
+                    box=True,
                     dayfirst=dayfirst,
                     errors='ignore',
                     infer_datetime_format=infer_datetime_format
                 )
+                if not isinstance(converted, DatetimeIndex):
+                    return np.asarray(converted)
+                return converted
             except:
                 return tools.to_datetime(
                     parsing.try_parse_dates(strs, dayfirst=dayfirst))
